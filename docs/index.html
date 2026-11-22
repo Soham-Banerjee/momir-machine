@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#14110f">
+  <title>Momir Machine</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon-192.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <h1>Momir Machine</h1>
+    <button id="installBtn" class="ghost" type="button" hidden>Install</button>
+  </header>
+
+  <main>
+    <p id="notice" class="notice" role="alert" hidden></p>
+
+    <section aria-labelledby="pickLabel">
+      <h2 id="pickLabel">Mana value</h2>
+      <div id="grid" class="grid"></div>
+    </section>
+
+    <section class="result" aria-live="polite">
+      <div class="result-head">
+        <div>
+          <div id="resultName" class="result-name">Pick a mana value</div>
+          <div id="resultMeta" class="result-meta">A random creature will appear here.</div>
+        </div>
+        <button id="printBtn" type="button" disabled>Print</button>
+      </div>
+      <div id="receipt" class="receipt" hidden></div>
+    </section>
+
+    <section aria-labelledby="logLabel">
+      <div class="row">
+        <h2 id="logLabel">This game <span id="logCount" class="muted"></span></h2>
+        <button id="newGame" class="ghost" type="button">New game</button>
+      </div>
+      <ol id="log" class="log"></ol>
+    </section>
+
+    <details class="settings">
+      <summary>Settings</summary>
+      <label class="opt"><input id="optAuto" type="checkbox"> Print automatically when I pick a mana value</label>
+      <label class="opt"><input id="optNoRepeat" type="checkbox"> No repeats within a game</label>
+      <label class="opt">Send prints to
+        <select id="optOutput">
+          <option value="rawbt">RawBT app (Android)</option>
+          <option value="preview">Nowhere (preview only)</option>
+        </select>
+      </label>
+      <button id="testBtn" class="ghost" type="button">Print test page</button>
+      <p class="muted small">Printing goes through the free RawBT app. Pair your printer inside RawBT first.</p>
+      <p id="dataInfo" class="muted small"></p>
+    </details>
+  </main>
+
+  <p id="status" class="toast" role="status" aria-live="polite"></p>
+  <noscript><p class="notice">This app needs JavaScript.</p></noscript>
+
+  <script src="format.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
