@@ -1,4 +1,5 @@
 """Run with: python3 -m unittest discover -s tests -v"""
+import gzip
 import json
 import sys
 import tempfile
@@ -64,6 +65,22 @@ class PrepTests(unittest.TestCase):
 
     def test_count_matches_buckets(self):
         self.assertEqual(self.data["count"], sum(len(v) for v in self.data["byMv"].values()))
+
+    def test_loads_every_bulk_file_format(self):
+        """Plain/gzipped, JSON array/JSON Lines, regardless of the file name."""
+        array = json.dumps(self.cards)
+        lines = "\n".join(json.dumps(c) for c in self.cards) + "\n"
+        with tempfile.TemporaryDirectory() as tmp:
+            for name, payload in (
+                ("a.json", array.encode()), ("b.jsonl", lines.encode()),
+                ("c.json.gz", gzip.compress(array.encode())), ("d.jsonl.gz", gzip.compress(lines.encode())),
+                ("misnamed.json", gzip.compress(lines.encode())),
+            ):
+                path = Path(tmp) / name
+                path.write_bytes(payload)
+                loaded = prep.load_cards(path)
+                self.assertEqual(len(loaded), len(self.cards), name)
+                self.assertEqual(prep.build(loaded)["count"], self.data["count"], name)
 
     def test_cli_writes_valid_json(self):
         with tempfile.TemporaryDirectory() as tmp:

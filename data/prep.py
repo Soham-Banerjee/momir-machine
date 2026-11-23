@@ -4,6 +4,7 @@
 Usage:
     python3 data/prep.py                       # download the latest bulk file, then build
     python3 data/prep.py oracle-cards.json     # build from a file you already downloaded
+                                               # (.json, .jsonl, or either one gzipped as .gz all work)
     python3 data/prep.py --include-unsets ...  # keep silver/gold-bordered and other joke cards
 
 Output (default docs/creatures.json):
@@ -13,6 +14,7 @@ where each face is {"n", "c" (mana cost), "t" (type line), "o" (oracle text), "p
 with empty fields omitted.
 """
 import argparse
+import gzip
 import json
 import sys
 import tempfile
@@ -101,6 +103,21 @@ def build(cards, include_unsets=False):
     }
 
 
+def load_cards(path):
+    """Read a Scryfall bulk file: plain or gzipped, as one JSON array or as JSON Lines (one card per line).
+    The format is detected from the file's contents, not its name."""
+    path = Path(path)
+    with open(path, "rb") as fh:
+        gzipped = fh.read(2) == b"\x1f\x8b"
+    opener = gzip.open if gzipped else open
+    with opener(path, "rt", encoding="utf-8") as fh:
+        text = fh.read()
+    stripped = text.lstrip()
+    if stripped.startswith("["):
+        return json.loads(stripped)
+    return [json.loads(line) for line in stripped.splitlines() if line.strip()]
+
+
 def fetch(url, dest=None):
     req = urllib.request.Request(url, headers=HEADERS)
     with urllib.request.urlopen(req, timeout=120) as resp:
@@ -134,8 +151,10 @@ def main(argv=None):
             sys.exit(f"Download failed ({exc}).\nDownload 'Oracle Cards' from https://scryfall.com/docs/api/bulk-data "
                      "and run: python3 data/prep.py <that file>")
 
-    with open(src, encoding="utf-8") as fh:
-        cards = json.load(fh)
+    try:
+        cards = load_cards(src)
+    except (OSError, ValueError) as exc:
+        sys.exit(f"Could not read {src} as a Scryfall bulk file ({exc}).")
     data = build(cards, args.include_unsets)
 
     out = Path(args.output)
