@@ -57,6 +57,44 @@ test('toBase64 round trips', () => {
   assert.deepEqual([...Buffer.from(F.toBase64(bytes), 'base64')], [...bytes]);
 });
 
+test('arrows and other symbols print as plain ASCII (Built Bear regression)', () => {
+  assert.equal(F.asciiFold('1 point each → Flash; deathtouch'), '1 point each -> Flash; deathtouch');
+  assert.deepEqual(F.unmappedChars('→ and ½ and ☃ and ? and é'), ['☃']);
+});
+
+test('lookalike colons and crossed-out playtest text print sensibly', () => {
+  const cross = word => [...word].map(c => c + String.fromCharCode(0x336)).join('');
+  const colon = String.fromCharCode(0xa789);
+  assert.equal(F.asciiFold('Ratonhnhaké' + colon + 'ton'), 'Ratonhnhake:ton');
+  // Bolshack Dragon: "Double ~breaker~ strike" and "+1~000~ power for each ~fire~ red card"
+  const text = 'Double ' + cross('breaker') + ' strike\nWhile attacking, this creature gets +1' + cross('000') + ' power for each ' + cross('fire') + ' red card in your graveyard.';
+  const out = F.asciiFold(text).split(/\s+/).filter(Boolean).join(' ');
+  assert.equal(out, 'Double strike While attacking, this creature gets +1 power for each red card in your graveyard.');
+  assert.deepEqual(F.unmappedChars(text), []);
+  assert.deepEqual(F.unmappedChars(colon), []);
+  assert.equal(F.asciiFold('e' + String.fromCharCode(0x301)), 'e');   // a lone accent mark is simply dropped
+});
+
+test('every character in the generated data can be printed', (t) => {
+  const file = process.env.CREATURES_JSON || path.join(__dirname, '..', 'docs', 'creatures.json');
+  if (!fs.existsSync(file)) return t.skip('no creatures.json to test against: ' + file);
+  const data = JSON.parse(fs.readFileSync(file, 'utf8'));
+  const found = new Map();   // character -> card names that use it
+  for (const list of Object.values(data.byMv)) {
+    for (const card of list) {
+      for (const face of card.f) {
+        for (const ch of F.unmappedChars([face.n, face.c, face.t, face.o, face.p, face.u].join(' '))) {
+          if (!found.has(ch)) found.set(ch, []);
+          found.get(ch).push(card.n);
+        }
+      }
+    }
+  }
+  const report = [...found].map(([ch, names]) =>
+    `"${ch}" U+${ch.codePointAt(0).toString(16).toUpperCase().padStart(4, '0')} in ${names.length} card(s), e.g. ${names.slice(0, 3).join(', ')}`);
+  assert.equal(report.length, 0, 'characters the printer formatter does not know:\n  ' + report.join('\n  '));
+});
+
 test('every card in the generated data fits the paper and prints cleanly', (t) => {
   const file = process.env.CREATURES_JSON || path.join(__dirname, '..', 'docs', 'creatures.json');
   if (!fs.existsSync(file)) return t.skip('no creatures.json to test against: ' + file);
@@ -69,7 +107,6 @@ test('every card in the generated data fits the paper and prints cleanly', (t) =
       for (const l of lines) {
         const max = l.dw ? F.COLS / 2 : F.COLS;
         assert.ok(l.t.length <= max, `${card.n}: line too wide (${l.t.length}>${max}): "${l.t}"`);
-        assert.ok(!l.t.includes('?'), `${card.n}: unprintable character in "${l.t}"`);
       }
       const bytes = F.toEscPos(lines);
       assert.deepEqual([...bytes.slice(0, 2)], [0x1b, 0x40]);
@@ -183,7 +220,6 @@ test('every card in the generated data lays out cleanly in fixed length', (t) =>
       for (const l of r.lines) {
         const max = l.sm ? F.COLS_SM : l.dw ? F.COLS / 2 : F.COLS;
         assert.ok(l.t.length <= max, `${card.n}: line too wide: "${l.t}"`);
-        assert.ok(!l.t.includes('?'), `${card.n}: unprintable character in "${l.t}"`);
       }
       if (!r.overflow) assert.equal(r.dots, total * card.f.length, `${card.n}: not the standard length`);
       seen[r.overflow ? 'over' : r.tier ? 'small' : 'normal']++;

@@ -36,13 +36,26 @@
     'Þ': 'Th', 'þ': 'th', 'Ł': 'L', 'ł': 'l',
     '—': '-', '–': '-', '−': '-', '‑': '-', '•': '*', '·': '*', '…': '...',
     '‘': "'", '’': "'", '‚': ',', '“': '"', '”': '"', '„': '"', '«': '<<', '»': '>>',
-    '½': '1/2', '¼': '1/4', '¾': '3/4', '∞': 'inf', '×': 'x', '÷': '/',
+    '½': '1/2', '¼': '1/4', '¾': '3/4', '⅓': '1/3', '⅔': '2/3', '⅛': '1/8', '∞': 'inf', '×': 'x', '÷': '/',
+    '→': '->', '←': '<-', '↔': '<->', '⇒': '=>', '≤': '<=', '≥': '>=', '±': '+/-', '²': '2', '³': '3',
+    '™': 'TM', '®': '(R)', '©': '(C)', '★': '*', '☆': '*',
     ' ': ' ', '­': '', '​': '',
   };
 
+  // Lookalike colon used in some names (Assassin's Creed). Built from its code point so the source stays plain.
+  FOLD[String.fromCharCode(0xa789)] = ':';
+  FOLD[String.fromCharCode(0xff1a)] = ':';
+
+  // Some playtest cards cross words out with a combining stroke after each letter ("Double b̶r̶e̶a̶k̶e̶r̶ strike").
+  // The crossed-out letters are not part of the card, so drop them; any other lone combining mark is dropped too.
+  const STROKE = String.fromCharCode(0x336);
+  const STRUCK = new RegExp('[^' + STROKE + ']' + STROKE, 'gu');
+  const MARKS = new RegExp('[' + String.fromCharCode(0x300) + '-' + String.fromCharCode(0x36f) + ']', 'g');
+  const dropStruck = s => String(s).replace(STRUCK, '').replace(MARKS, '');
+
   function asciiFold(s) {
     let out = '';
-    for (const ch of String(s)) {
+    for (const ch of dropStruck(s)) {
       if (FOLD[ch] !== undefined) { out += FOLD[ch]; continue; }
       const code = ch.codePointAt(0);
       if (code === 10 || (code >= 32 && code < 127)) { out += ch; continue; }
@@ -50,6 +63,13 @@
       out += /^[\x20-\x7e]+$/.test(base) ? base : '?';
     }
     return out;
+  }
+
+  /** Characters in `s` that asciiFold can only print as "?" (a real "?" is not counted). */
+  function unmappedChars(s) {
+    const bad = new Set();
+    for (const ch of String(s)) if (ch !== '?' && asciiFold(ch) === '?') bad.add(ch);
+    return [...bad];
   }
 
   // "{2}{W}{W}" -> "2WW"; "{T}" -> "[T]" inside rules text. Hybrid/Phyrexian symbols get parentheses.
@@ -294,7 +314,7 @@
 
   return {
     COLS, COLS_SM, PITCH, MIN_ROWS, MAX_ROWS,
-    asciiFold, manaCost, rulesText, wrap, cardToLines, layoutCard, analyze, autoRows, faceNaturalDots, linesDots: dotsOf,
+    asciiFold, unmappedChars, manaCost, rulesText, wrap, cardToLines, layoutCard, analyze, autoRows, faceNaturalDots, linesDots: dotsOf,
     testPage, toText, toEscPos, toBase64,
   };
 });
