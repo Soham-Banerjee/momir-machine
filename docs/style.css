@@ -72,6 +72,8 @@ button.ghost { background: transparent; color: var(--muted); min-height: 36px; p
 .receipt .a-r { text-align: right; }
 .receipt .dh:not(.dw) { transform: scaleY(1.7); margin: .45em 0; }
 .receipt .dw { font-size: 2em; line-height: 1.1; }
+.receipt .sm { font-size: 11.4px; line-height: 13px; }   /* the printer's small font: 42 columns in the same width */
+.receipt .spacer { display: block; }
 
 .row { display: flex; align-items: center; justify-content: space-between; }
 .row h2 { margin: 0; }
@@ -88,6 +90,11 @@ button.ghost { background: transparent; color: var(--muted); min-height: 36px; p
 .opt { display: flex; align-items: center; gap: 10px; padding: 10px 0; }
 .opt input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--accent); }
 .opt select { margin-left: auto; min-height: 40px; }
+.opt input[type=number] {
+  margin-left: auto; width: 7.5em; min-height: 40px; padding: 0 10px; font: inherit; color: inherit;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+}
+.settings button.ghost { margin: 6px 6px 0 0; }
 
 .toast {
   position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom)); transform: translate(-50%, 20px);

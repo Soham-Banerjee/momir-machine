@@ -1,7 +1,7 @@
 /* Service worker: makes the app work with no signal after the first visit.
  * Strategy: serve from cache immediately, refresh the cache in the background
  * (so updated code or data shows up on the next launch). Bump CACHE to force a clean slate. */
-const CACHE = 'momir-v1';
+const CACHE = 'momir-v3';
 const SHELL = ['./', 'index.html', 'style.css', 'app.js', 'format.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', event => {

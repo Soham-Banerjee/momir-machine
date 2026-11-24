@@ -46,6 +46,15 @@
       <summary>Settings</summary>
       <label class="opt"><input id="optAuto" type="checkbox"> Print automatically when I pick a mana value</label>
       <label class="opt"><input id="optNoRepeat" type="checkbox"> No repeats within a game</label>
+      <label class="opt"><input id="optHide" type="checkbox"> Hide the card on screen (surprise mode, it still prints)</label>
+      <label class="opt"><input id="optCounts" type="checkbox"> Show how many creatures exist at each mana value</label>
+      <label class="opt"><input id="optFixed" type="checkbox"> Fixed receipt length (long cards use small text)</label>
+      <div id="fixedBox" hidden>
+        <label class="opt">Standard length, in rows
+          <input id="optFixedRows" type="number" inputmode="numeric" min="14" max="60" step="1" placeholder="auto">
+        </label>
+        <p id="fixedInfo" class="muted small"></p>
+      </div>
       <label class="opt">Send prints to
         <select id="optOutput">
           <option value="rawbt">RawBT app (Android)</option>
@@ -53,6 +62,7 @@
         </select>
       </label>
       <button id="testBtn" class="ghost" type="button">Print test page</button>
+      <button id="sampleBtn" class="ghost" type="button">Print 3 sample cards (shortest, middle, longest)</button>
       <p class="muted small">Printing goes through the free RawBT app. Pair your printer inside RawBT first.</p>
       <p id="dataInfo" class="muted small"></p>
     </details>
